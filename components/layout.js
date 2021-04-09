@@ -1,11 +1,11 @@
-import Head from 'next/head'
-import Image from 'next/image'
-import styles from './layout.module.css'
-import utilStyles from '../styles/utils.module.css'
-import Link from 'next/link'
+import Head from "next/head";
+import Image from "next/image";
+import styles from "./layout.module.css";
+import utilStyles from "../styles/utils.module.css";
+import Link from "next/link";
 
-const name = '[Your Name]'
-export const siteTitle = 'Next.js Sample Website'
+const name = "[Your Name]";
+export const siteTitle = "Next.js Sample Website";
 
 export default function Layout({ children, home }) {
   return (
@@ -25,7 +25,7 @@ export default function Layout({ children, home }) {
         <meta name="og:title" content={siteTitle} />
         <meta name="twitter:card" content="summary_large_image" />
       </Head>
-      <header className={styles.header}>
+      <loggedInHeader className={styles.loggedInHeader}>
         {home ? (
           <>
             <Image
@@ -59,7 +59,7 @@ export default function Layout({ children, home }) {
             </h2>
           </>
         )}
-      </header>
+      </loggedInHeader>
       <main>{children}</main>
       {!home && (
         <div className={styles.backToHome}>
@@ -69,5 +69,5 @@ export default function Layout({ children, home }) {
         </div>
       )}
     </div>
-  )
+  );
 }
