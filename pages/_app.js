@@ -1,50 +1,67 @@
-// From Material-ui nextjs sample https://github.com/mui-org/material-ui/tree/master/examples/nextjs
-
-import React, { useEffect } from "react";
-import PropTypes from "prop-types";
-import Head from "next/head";
-
-import { MsalProvider } from "@azure/msal-react";
+import React, { useState } from "react";
+import "../styles/global.css";
+import azureConfig from "../src/azureConfig";
 import { PublicClientApplication } from "@azure/msal-browser";
-import { msalConfig } from "../src/authConfig";
-import { PageLayout } from "../src/ui";
-import Grid from "@material-ui/core/Grid";
-import { CustomNavigationClient } from "../src/NavigationClient";
 
-const msalInstance = new PublicClientApplication(msalConfig);
+export default function App({ Component, pageProps }) {
+  const [error, setError] = useState();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState({});
 
-export default function MyApp({ Component, pageProps }) {
-  // The next 3 lines are optional. This is how you configure MSAL to take advantage of the router's navigate functions when MSAL redirects between pages in your app
-  const router = useRouter();
-  const navigationClient = new CustomNavigationClient(router);
-  msalInstance.setNavigationClient(navigationClient);
+  // Initialize the MSAL application object
+  const publicClientApplication = new PublicClientApplication({
+    auth: {
+      clientId: azureConfig.appId,
+      redirectUri: azureConfig.redirectUri,
+      authority: azureConfig.authority,
+    },
+    cache: {
+      cacheLocation: "sessionStorage",
+      storeAuthStateInCookie: true,
+    },
+  });
 
-  useEffect(() => {
-    // Remove the server-side injected CSS.
-    const jssStyles = document.querySelector("#jss-server-side");
-    if (jssStyles) {
-      jssStyles.parentElement.removeChild(jssStyles);
+  const login = async () => {
+    // Login via popup
+    try {
+      await publicClientApplication.loginPopup({
+        scopes: azureConfig.scopes,
+        prompt: "select_account",
+      });
+      setIsAuthenticated(true);
+    } catch (error) {
+      setIsAuthenticated(false);
+      setUser({});
+      setError(error);
     }
-  }, []);
+  };
+
+  const logout = () => {
+    setIsAuthenticated(false);
+    setUser({});
+    setError(error);
+    publicClientApplication.logoutRedirect();
+  };
 
   return (
     <>
-      <Head>
-        <title>MSAL-React Next.js Sample</title>
-        <meta
-          name="viewport"
-          content="minimum-scale=1, initial-scale=1, width=device-width"
-        />
-      </Head>
-
-      <MsalProvider instance={msalInstance}>
-        <Component {...pageProps} />
-      </MsalProvider>
+      <div>
+        <p>
+          {isAuthenticated ? (
+            <Component
+              loggedInHeader={
+                <>
+                  <p>Successful logged in.</p>
+                  <button onClick={logout}>Log out</button>
+                </>
+              }
+              {...pageProps}
+            />
+          ) : (
+            <button onClick={login}>Log in</button>
+          )}
+        </p>
+      </div>
     </>
   );
 }
-
-MyApp.propTypes = {
-  Component: PropTypes.elementType.isRequired,
-  pageProps: PropTypes.object.isRequired,
-};
